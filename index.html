@@ -640,20 +640,27 @@
     btn.disabled = true;
     btn.textContent = 'Enviando…';
 
-    fetch('https://formsubmit.co/ajax/contacto@wtp.pe', {
+    fetch('https://formsubmit.co/ajax/lecp1530@gmail.com', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify(payload)
     })
-      .then(res => { if (!res.ok) throw new Error('request failed'); return res.json(); })
-      .then(() => {
+      .then(res => res.json().catch(() => ({})).then(data => ({ ok: res.ok, data })))
+      .then(({ ok, data }) => {
+        // FormSubmit responde success:"true" cuando el formulario ya está activado
+        const exito = ok && String(data.success) === 'true';
+        if (!exito) {
+          console.warn('FormSubmit:', data);
+          throw new Error(data.message || 'Envío rechazado');
+        }
         btn.textContent = '¡Enviado! Te contactamos pronto ✓';
         btn.style.background = '#22C55E';
         form.reset();
       })
-      .catch(() => {
+      .catch(err => {
+        console.error('Error al enviar el formulario:', err.message);
         btn.disabled = false;
-        btn.textContent = 'Hubo un error — escríbenos por WhatsApp mejor';
+        btn.textContent = 'No se pudo enviar — escríbenos por WhatsApp';
         btn.style.background = '#DC2626';
       });
   }
